@@ -130,9 +130,11 @@ end
 ---@param timeout number
 ---@param on_timer fun(timer: Timer, count: integer)
 ---@param desc? string # 描述
+---@param immediate? boolean # 是否立即执行一次
 ---@return Timer
-function M.loop(timeout, on_timer, desc)
+function M.loop(timeout, on_timer, desc, immediate)
     desc = desc or make_timer_reason(on_timer)
+    immediate = immediate or false
     local timer
     local count = 0
     local py_timer = GameAPI.add_timer(Fix32(timeout), true, function()
@@ -140,6 +142,10 @@ function M.loop(timeout, on_timer, desc)
         timer:execute(count)
     end, desc)
     timer = New 'Timer' (py_timer, on_timer, 'second', desc)
+    if immediate then
+        count = count + 1
+        timer:execute(count)
+    end
     return timer
 end
 
@@ -168,9 +174,11 @@ end
 ---@param times integer
 ---@param on_timer fun(timer: Timer, count: integer)
 ---@param desc? string # 描述
+---@param immediate? boolean # 是否立即执行一次(计入最大次数)
 ---@return Timer
-function M.count_loop(timeout, times, on_timer, desc)
+function M.count_loop(timeout, times, on_timer, desc, immediate)
     desc = desc or make_timer_reason(on_timer)
+    immediate = immediate or false
     local timer
     local count = 0
     local py_timer = GameAPI.add_timer(Fix32(timeout), true, function()
@@ -182,6 +190,14 @@ function M.count_loop(timeout, times, on_timer, desc)
         end
     end, desc)
     timer = New 'Timer' (py_timer, on_timer, 'second', desc)
+    if immediate then
+        count = count + 1
+        timer:execute(count)
+
+        if count >= times then
+            timer:remove()
+        end
+    end
     return timer
 end
 
@@ -208,12 +224,19 @@ end
 
 -- 立即执行
 function M:execute(...)
+    if self:is_removed() then
+        return
+    end
     xpcall(self.on_timer, log.error, self, ...)
 end
 
 -- 移除计时器
 function M:remove()
     Delete(self)
+end
+
+function M:is_removed()
+    return not IsValid(self)
 end
 
 -- 暂停计时器

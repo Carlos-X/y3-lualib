@@ -100,6 +100,8 @@ y3.dump         = require 'y3.util.dump'
 y3.sync         = require 'y3.util.sync'
 y3.network      = require 'y3.util.network'
 y3.eca          = require 'y3.util.eca_helper'
+y3.base64       = require 'y3.util.base64'
+y3.aes          = require 'y3.util.aes'
 
 require 'y3.util.local_ui_logic'
 

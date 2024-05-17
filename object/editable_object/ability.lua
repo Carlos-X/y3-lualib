@@ -41,6 +41,17 @@ function M:__del()
         return
     end
     self.phandle:api_remove()
+    --TODO
+    --技能正在放的时候删不掉，需要不停尝试删除
+    if GameAPI.ability_is_exist(self.handle) then
+        y3.ltimer.loop_frame(1, function (timer, count)
+            if not GameAPI.ability_is_exist(self.handle)
+            or self._removed_by_py then
+                return
+            end
+            self.phandle:api_remove()
+        end)
+    end
 end
 
 ---@private
@@ -105,16 +116,12 @@ function M:has_tag(tag)
 end
 
 --添加标签
----5月30日版本更新后可用
----@deprecated
 ---@param tag string 标签
 function M:add_tag(tag)
     self.phandle:api_add_tag(tag)
 end
 
 ---移除标签
----5月30日版本更新后可用
----@deprecated
 ---@param tag string 标签
 function M:remove_tag(tag)
     self.phandle:api_remove_tag(tag)
